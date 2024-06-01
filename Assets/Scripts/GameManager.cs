@@ -1,18 +1,43 @@
-using System.Collections;
+﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class GameManager : MonoBehaviour
+public class GameManager : Singleton<GameManager>
 {
-    // Start is called before the first frame update
+
+    //TODO переделать обработку закрытия/открытия окна
+    public GameObject MenuWindow;
+
     void Start()
     {
-        
+        StartLevel();
     }
 
-    // Update is called once per frame
-    void Update()
+
+    public void StartLevel()
     {
-        
+        Spawner.Instance.AllDestroyItem();
+        ScoreManager.Instance.ResetScore();
+        HeartManager.Instance.ResetHeart();
+
+        //TODO перепилить
+        for (int i = 1; i <= 3; i++)
+            Spawner.Instance.SpawnWallLR(i*3);
     }
+
+
+
+    public void CloseMenu()
+    {
+        Time.timeScale = 1.0f;
+
+        MenuWindow.SetActive(false);
+    }
+
+    public void OpenMenu()
+    {
+        Time.timeScale = 0.0f;
+        MenuWindow.SetActive(true);
+    }
+
 }
