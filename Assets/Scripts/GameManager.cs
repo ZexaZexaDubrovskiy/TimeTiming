@@ -20,9 +20,10 @@ public class GameManager : Singleton<GameManager>
         ScoreManager.Instance.ResetScore();
         HeartManager.Instance.ResetHeart();
 
-        //TODO перепилить
-        for (int i = 1; i <= 3; i++)
-            Spawner.Instance.SpawnWallLR(i*3);
+        Player.Instance.transform.position = Vector2.zero;
+
+
+        Spawner.Instance.StartSpawnWalls();
     }
 
 

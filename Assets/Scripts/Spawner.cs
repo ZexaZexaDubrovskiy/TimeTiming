@@ -1,4 +1,4 @@
-using System.Collections;
+﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UIElements;
@@ -7,9 +7,11 @@ public class Spawner : Singleton<Spawner>
 {
 
     [SerializeField] private float timeToSpawn, speed;
+    public LayerMask wallLayer;
     private List<GameObject> prefabs = new List<GameObject>();
     private List<GameObject> gameObjects = new List<GameObject>();
-    private string[] tages = { "Wall", "WallDamage", "WallDead", "WallHeal" };
+    private string[] nameWalls = { "Wall", "WallDamage", "WallDead", "WallHeal" };
+    private string[] tages = { "wall", "heal", "damage", "dead" };
     private float timer;
     private enum Position { Left = -1, Mid = 0, Right = 1 }
 
@@ -17,9 +19,8 @@ public class Spawner : Singleton<Spawner>
     {
         timer = timeToSpawn;
 
-
-        for (int i = 0; i < tages.Length; i++)
-            prefabs.Add(Resources.Load<GameObject>(tages[i]));
+        for (int i = 0; i < nameWalls.Length; i++)
+            prefabs.Add(Resources.Load<GameObject>(nameWalls[i]));
     }
 
 
@@ -33,6 +34,10 @@ public class Spawner : Singleton<Spawner>
         }
         else
             timer -= Time.deltaTime;
+    }
+
+    private void FixedUpdate()
+    {
         MovementItems(gameObjects);
     }
 
@@ -40,7 +45,7 @@ public class Spawner : Singleton<Spawner>
     private void MovementItems(List<GameObject> GOs)
     {
         for (int i = 0; i < GOs.Count; i++)
-            GOs[i].transform.position = new Vector2(GOs[i].transform.position.x, GOs[i].transform.position.y - speed * Time.deltaTime);
+            GOs[i].transform.position = new Vector2(GOs[i].transform.position.x, GOs[i].transform.position.y - speed * Time.fixedDeltaTime);
         CheckPositionItem(GOs);
     }
 
@@ -54,7 +59,11 @@ public class Spawner : Singleton<Spawner>
         }
     }
 
-
+    public void StartSpawnWalls()
+    {
+        for (int i = 1; i < 4; i++)
+            SpawnWallLR(height: i*5 - 3, length: 4.5f, random: false);
+    }
 
     private void SpawnItem(Position pos, float length, GameObject go = null, float height = 10)
     {
@@ -63,20 +72,21 @@ public class Spawner : Singleton<Spawner>
             GameObject Wall = Instantiate(go, new Vector2((int)pos * 2, height), Quaternion.identity);
             Wall.transform.localScale = new Vector2(Wall.transform.localScale.x, length);
             gameObjects.Add(Wall);
+            CheckPositionWall(Wall.GetComponent<BoxCollider2D>(), gameObjects.Count-1);
         }
     }
-    public void SpawnWallLR(float height = 10)
+    public void SpawnWallLR(float height = 10, bool random = true, float length = 1)
     {
-        float randomLength = Random.Range(3, 5);
-        SpawnItem(Position.Left, randomLength, prefabs.Find(p => p.name.Equals("Wall")), height);
-        SpawnItem(Position.Right, randomLength, prefabs.Find(p => p.name.Equals("Wall")), height);
+        if (random) length = Random.Range(2, 4);
+        SpawnItem(Position.Left, length, prefabs.Find(p => p.name.Equals("Wall")), height);
+        SpawnItem(Position.Right, length, prefabs.Find(p => p.name.Equals("Wall")), height);
     }
     public void SpawnRandomObstacle()
     {
         float randomLength = Random.Range(1, 5);
         int randomObstacle = Random.Range(1, prefabs.Count);
         if (prefabs[randomObstacle].tag == "dead" || prefabs[randomObstacle].tag == "damage")
-            randomLength = 1;
+            randomLength = Random.Range(1, 2);
         SpawnItem(Position.Mid, randomLength, prefabs[randomObstacle]);
     }
     public void AllDestroyItem()
@@ -102,5 +112,16 @@ public class Spawner : Singleton<Spawner>
                 gameObjects.RemoveAt(i);
             }
     }
+    private void CheckPositionWall(BoxCollider2D wallCollider, int index = -1)  
+    {
+        Vector2 size = wallCollider.GetComponent<BoxCollider2D>().size;
+        Vector2 center = wallCollider.GetComponent<BoxCollider2D>().bounds.center;
+        Collider2D[] results = Physics2D.OverlapBoxAll(center, size, 0, wallLayer);
+
+        foreach (var result in results)
+            if (result != wallCollider)
+                DestroyItemWithIndex(index);
+    }
+
 
 }

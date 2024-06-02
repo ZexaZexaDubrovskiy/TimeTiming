@@ -11,7 +11,7 @@ GameObject:
   - component: {fileID: 2282826989430866939}
   - component: {fileID: 7639136387167236385}
   - component: {fileID: 1532643363306208780}
-  m_Layer: 0
+  m_Layer: 3
   m_Name: WallHeal
   m_TagString: heal
   m_Icon: {fileID: 0}

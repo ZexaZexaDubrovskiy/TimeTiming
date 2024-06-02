@@ -7,31 +7,45 @@ public class Player : Singleton<Player>
 {
     Rigidbody2D rb;
     public float moveSpeed, bounceForce;
-   
+    private bool _isMouseButtonDown, _isJump;
+
 
     private void Awake()
     {
         HeartManager.Instance.UpdateHearts(HeartManager.Instance.CurrentHealth);
         rb = GetComponent<Rigidbody2D>();
+        _isJump = true;
     }
 
     void Update()
     {
         if (Input.GetMouseButtonDown(0))
-            MoveTowardsCenter();
+            _isMouseButtonDown = true;
+        CheckPlayerPosition();
     }
 
-    void MoveTowardsCenter()
+    private void FixedUpdate()
     {
-        Vector3 targetPosition = new Vector3(0, transform.position.y, transform.position.z);
-        Vector3 direction = (targetPosition - transform.position).normalized;
+        if (_isMouseButtonDown && _isJump)
+        {
+            Movement();
+            _isMouseButtonDown = _isJump = false;
+        }
+
+    }
+
+    void Movement()
+    {
+        float horizontalDirection = transform.position.x > 0 ? 1f : -1f;
+        Vector3 direction = new Vector3(horizontalDirection, 0, 0);
         rb.velocity = direction * moveSpeed;
     }
 
     private void OnCollisionEnter2D(Collision2D collision)
     {
+        _isJump = true;
         Vector2 bounceDirection = collision.contacts[0].normal; //направление отталкивания
-        rb.AddForce(bounceDirection * bounceForce * Time.fixedDeltaTime, ForceMode2D.Impulse);
+        rb.AddForce(bounceDirection * bounceForce, ForceMode2D.Impulse);
 
         if (collision.gameObject.tag == "damage")
             HeartManager.Instance.CurrentHealth--;
@@ -39,19 +53,22 @@ public class Player : Singleton<Player>
         if (collision.gameObject.tag == "heal")
             HeartManager.Instance.CurrentHealth++;
 
-        if (collision.gameObject.tag == "lose" || HeartManager.Instance.CurrentHealth <= 0)
+        if (collision.gameObject.tag == "dead" || HeartManager.Instance.CurrentHealth <= 0)
             Die();
-
 
         ScoreManager.Instance.UpdateScore(1);
         HeartManager.Instance.UpdateHearts(HeartManager.Instance.CurrentHealth);
     }
 
-
+    private void CheckPlayerPosition()
+    {
+        if (transform.position.x >= 2 || transform.position.x <= -2)
+            Die();
+    }
 
     private void Die()
     {
-        //GameManager.Instance.StartLevel();
+        GameManager.Instance.StartLevel();
     }
 
 }

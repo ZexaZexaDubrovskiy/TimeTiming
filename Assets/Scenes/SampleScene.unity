@@ -1697,8 +1697,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 866d062d2d2a40c42ab042006eeb4ac7, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  timeToSpawn: 2
+  timeToSpawn: 2.1
   speed: 1.8
+  wallLayer:
+    serializedVersion: 2
+    m_Bits: 8
 --- !u!1 &1380386694
 GameObject:
   m_ObjectHideFlags: 0
@@ -2544,9 +2547,9 @@ Rigidbody2D:
   m_ExcludeLayers:
     serializedVersion: 2
     m_Bits: 0
-  m_Interpolate: 0
+  m_Interpolate: 1
   m_SleepingMode: 1
-  m_CollisionDetection: 0
+  m_CollisionDetection: 1
   m_Constraints: 6
 --- !u!212 &1858616802
 SpriteRenderer:
@@ -2627,8 +2630,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ab60fb73d96f12342ad3a94021ae0294, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  moveSpeed: 5
-  bounceForce: 200
+  moveSpeed: 4
+  bounceForce: 4
 --- !u!1 &1942744544
 GameObject:
   m_ObjectHideFlags: 0
