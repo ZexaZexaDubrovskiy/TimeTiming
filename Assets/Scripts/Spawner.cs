@@ -13,12 +13,13 @@ public class Spawner : Singleton<Spawner>
     private string[] nameWalls = { "Wall", "WallDamage", "WallDead", "WallHeal" };
     private string[] tages = { "wall", "heal", "damage", "dead" };
     private float timer;
+    private GameObject _background;
     private enum Position { Left = -1, Mid = 0, Right = 1 }
 
     void Awake()
     {
         timer = timeToSpawn;
-
+        _background = GameObject.Find("BackgroundLayer");
         for (int i = 0; i < nameWalls.Length; i++)
             prefabs.Add(Resources.Load<GameObject>(nameWalls[i]));
     }
@@ -39,6 +40,7 @@ public class Spawner : Singleton<Spawner>
     private void FixedUpdate()
     {
         MovementItems(gameObjects);
+        LowerTheBackground();
     }
 
 
@@ -121,6 +123,17 @@ public class Spawner : Singleton<Spawner>
         foreach (var result in results)
             if (result != wallCollider)
                 DestroyItemWithIndex(index);
+    }
+
+
+    private void LowerTheBackground()
+    {
+        if (-1920.0f <= _background.transform.localPosition.y) {
+
+            Vector3 newPosition = _background.transform.position;
+            newPosition.y -= speed * Time.fixedDeltaTime;
+            _background.transform.position = newPosition;
+        }
     }
 
 

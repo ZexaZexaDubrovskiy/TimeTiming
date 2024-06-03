@@ -6,7 +6,7 @@ using UnityEngine;
 public class Player : Singleton<Player>
 {
     Rigidbody2D rb;
-    public float moveSpeed, bounceForce;
+    public float moveSpeed, bounceForce, _oldX = 0;
     private bool _isMouseButtonDown, _isJump;
 
 
@@ -36,7 +36,7 @@ public class Player : Singleton<Player>
 
     void Movement()
     {
-        float horizontalDirection = transform.position.x > 0 ? 1f : -1f;
+        float horizontalDirection = transform.position.x >= 0 ? 1f : -1f;
         Vector3 direction = new Vector3(horizontalDirection, 0, 0);
         rb.velocity = direction * moveSpeed;
     }

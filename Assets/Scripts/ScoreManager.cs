@@ -41,6 +41,7 @@ public class ScoreManager : Singleton<ScoreManager>
 
     private void UpdateScorePlayerText(ref TextMeshProUGUI textScore, int value)
     {
-        textScore.text = value.ToString();
+        if (textScore == _textBestScoreMeshPro) textScore.text = "BEST SCORE:\n" + value.ToString();
+        else textScore.text = value.ToString();
     }
 }
