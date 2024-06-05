@@ -13,6 +13,7 @@ public class Spawner : Singleton<Spawner>
     private string[] nameWalls = { "Wall", "WallDamage", "WallDead", "WallHeal" };
     private string[] tages = { "wall", "heal", "damage", "dead" };
     private float timer;
+    private GameObject _cloud;
     private GameObject _background;
     private enum Position { Left = -1, Mid = 0, Right = 1 }
 
@@ -20,9 +21,13 @@ public class Spawner : Singleton<Spawner>
     {
         timer = timeToSpawn;
         _background = GameObject.Find("BackgroundLayer");
+        _cloud = Resources.Load<GameObject>("CloudImage");
         for (int i = 0; i < nameWalls.Length; i++)
             prefabs.Add(Resources.Load<GameObject>(nameWalls[i]));
     }
+
+
+    private void Start() => StartCoroutine(SpawnCloud());
 
 
     void Update()
@@ -40,7 +45,7 @@ public class Spawner : Singleton<Spawner>
     private void FixedUpdate()
     {
         MovementItems(gameObjects);
-        LowerTheBackground();
+        MoveBackground();
     }
 
 
@@ -64,7 +69,7 @@ public class Spawner : Singleton<Spawner>
     public void StartSpawnWalls()
     {
         for (int i = 1; i < 4; i++)
-            SpawnWallLR(height: i*5 - 3, length: 4.5f, random: false);
+            SpawnWallLR(height: i * 5 - 3, length: 4.5f, random: false);
     }
 
     private void SpawnItem(Position pos, float length, GameObject go = null, float height = 10)
@@ -74,7 +79,17 @@ public class Spawner : Singleton<Spawner>
             GameObject Wall = Instantiate(go, new Vector2((int)pos * 2, height), Quaternion.identity);
             Wall.transform.localScale = new Vector2(Wall.transform.localScale.x, length);
             gameObjects.Add(Wall);
-            CheckPositionWall(Wall.GetComponent<BoxCollider2D>(), gameObjects.Count-1);
+            CheckPositionWall(Wall.GetComponent<BoxCollider2D>(), gameObjects.Count - 1);
+        }
+    }
+    private void SpawnItem(float posX, float length, GameObject go = null, float height = 10)
+    {
+        if (go is not null)
+        {
+            GameObject Wall = Instantiate(go, new Vector2(posX, height), Quaternion.identity);
+            Wall.transform.localScale = new Vector2(length, length);
+            gameObjects.Add(Wall);
+            CheckPositionWall(Wall.GetComponent<BoxCollider2D>(), gameObjects.Count - 1);
         }
     }
     public void SpawnWallLR(float height = 10, bool random = true, float length = 1)
@@ -114,7 +129,7 @@ public class Spawner : Singleton<Spawner>
                 gameObjects.RemoveAt(i);
             }
     }
-    private void CheckPositionWall(BoxCollider2D wallCollider, int index = -1)  
+    private void CheckPositionWall(BoxCollider2D wallCollider, int index = -1)
     {
         Vector2 size = wallCollider.GetComponent<BoxCollider2D>().size;
         Vector2 center = wallCollider.GetComponent<BoxCollider2D>().bounds.center;
@@ -126,15 +141,35 @@ public class Spawner : Singleton<Spawner>
     }
 
 
-    private void LowerTheBackground()
+    private void MoveBackground()
     {
-        if (-1920.0f <= _background.transform.localPosition.y) {
+        if (-1920.0f <= _background.transform.localPosition.y)
+        {
 
             Vector3 newPosition = _background.transform.position;
             newPosition.y -= speed * Time.fixedDeltaTime;
             _background.transform.position = newPosition;
         }
     }
+    public void ResetBackground()
+    {
+        Vector3 newPosition = _background.transform.position;
+        newPosition.y = 0;
+        _background.transform.position = newPosition;
+    }
+
+    private IEnumerator SpawnCloud()
+    {
+        while (true)
+        {
+            float randomPos = Random.Range(-20, 20) / 10.0f;
+            float randomLength = Random.Range(3, 5) / 10.0f;
+            SpawnItem(randomPos, randomLength, _cloud);
+
+            yield return new WaitForSeconds(1f);
+        }
+    }
+
 
 
 }

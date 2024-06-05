@@ -1,66 +1,92 @@
-﻿using System;
-using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
+﻿using UnityEngine;
 
 public class Player : Singleton<Player>
 {
-    Rigidbody2D rb;
-    public float moveSpeed, bounceForce, _oldX = 0;
-    private bool _isMouseButtonDown, _isJump;
+    private Rigidbody2D _rb;
+    private SoundManager _soundManager;
+    private HeartManager _heartManager;
+    private ScoreManager _scoreManager;
+    private GameManager _gameManager;
+    private TrailRenderer _trailRenderer;
 
+    public float moveSpeed;
+    public float bounceForce;
+    private bool _isMouseDown;
+    private bool _canJump;
 
     private void Awake()
     {
-        HeartManager.Instance.UpdateHearts(HeartManager.Instance.CurrentHealth);
-        rb = GetComponent<Rigidbody2D>();
-        _isJump = true;
+        _heartManager = HeartManager.Instance;
+        _scoreManager = ScoreManager.Instance;
+        _gameManager = GameManager.Instance;
+
+        _heartManager.UpdateHearts(_heartManager.CurrentHealth);
+        _rb = GetComponent<Rigidbody2D>();
+        _soundManager = GetComponent<SoundManager>();
+        _trailRenderer = GetComponent<TrailRenderer>();
+        _canJump = true;
     }
 
     void Update()
     {
         if (Input.GetMouseButtonDown(0))
-            _isMouseButtonDown = true;
-        CheckPlayerPosition();
+        {
+            _isMouseDown = true;
+        }
+
+        CheckPlayerOutOfBounds();
     }
 
     private void FixedUpdate()
     {
-        if (_isMouseButtonDown && _isJump)
+        if (_isMouseDown && _canJump)
         {
-            Movement();
-            _isMouseButtonDown = _isJump = false;
+            JumpMovement();
+            _isMouseDown = _canJump = false;
         }
-
     }
 
-    void Movement()
+    void JumpMovement()
     {
         float horizontalDirection = transform.position.x >= 0 ? 1f : -1f;
         Vector3 direction = new Vector3(horizontalDirection, 0, 0);
-        rb.velocity = direction * moveSpeed;
+        _rb.velocity = direction * moveSpeed;
     }
 
     private void OnCollisionEnter2D(Collision2D collision)
     {
-        _isJump = true;
-        Vector2 bounceDirection = collision.contacts[0].normal; //направление отталкивания
-        rb.AddForce(bounceDirection * bounceForce, ForceMode2D.Impulse);
+        _canJump = true;
+        Vector2 bounceDirection = collision.contacts[0].normal;
+        _rb.AddForce(bounceDirection * bounceForce, ForceMode2D.Impulse);
 
-        if (collision.gameObject.tag == "damage")
-            HeartManager.Instance.CurrentHealth--;
-
-        if (collision.gameObject.tag == "heal")
-            HeartManager.Instance.CurrentHealth++;
-
-        if (collision.gameObject.tag == "dead" || HeartManager.Instance.CurrentHealth <= 0)
-            Die();
-
-        ScoreManager.Instance.UpdateScore(1);
-        HeartManager.Instance.UpdateHearts(HeartManager.Instance.CurrentHealth);
+        HandleCollisionWithTags(collision);
+        _scoreManager.UpdateScore(1);
+        _heartManager.UpdateHearts(_heartManager.CurrentHealth);
     }
 
-    private void CheckPlayerPosition()
+    private void HandleCollisionWithTags(Collision2D collision)
+    {
+        if (collision.gameObject.CompareTag("wall"))
+        {
+            _soundManager.PlaySound(0, pitchMin: 0.9f, pitchMax: 1.1f, volume: 0.45f);
+        }
+        else if (collision.gameObject.CompareTag("damage"))
+        {
+            _heartManager.CurrentHealth--;
+            _soundManager.PlaySound(1, volume: 3f);
+        }
+        else if (collision.gameObject.CompareTag("heal"))
+        {
+            _heartManager.CurrentHealth++;
+            _soundManager.PlaySound(2);
+        }
+        else if (collision.gameObject.CompareTag("dead") || _heartManager.CurrentHealth <= 0)
+        {
+            Die();
+        }
+    }
+
+    private void CheckPlayerOutOfBounds()
     {
         if (transform.position.x >= 2 || transform.position.x <= -2)
             Die();
@@ -68,7 +94,7 @@ public class Player : Singleton<Player>
 
     private void Die()
     {
-        GameManager.Instance.StartLevel();
+        _soundManager.PlaySound(3);
+        _gameManager.StartLevel();
     }
-
 }
