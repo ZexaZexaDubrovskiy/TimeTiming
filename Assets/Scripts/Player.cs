@@ -7,12 +7,12 @@ public class Player : Singleton<Player>
     private HeartManager _heartManager;
     private ScoreManager _scoreManager;
     private GameManager _gameManager;
-    private TrailRenderer _trailRenderer;
 
     public float moveSpeed;
     public float bounceForce;
     private bool _isMouseDown;
     private bool _canJump;
+    private bool _directionJump;
 
     private void Awake()
     {
@@ -23,7 +23,6 @@ public class Player : Singleton<Player>
         _heartManager.UpdateHearts(_heartManager.CurrentHealth);
         _rb = GetComponent<Rigidbody2D>();
         _soundManager = GetComponent<SoundManager>();
-        _trailRenderer = GetComponent<TrailRenderer>();
         _canJump = true;
     }
 
@@ -35,6 +34,7 @@ public class Player : Singleton<Player>
         }
 
         CheckPlayerOutOfBounds();
+
     }
 
     private void FixedUpdate()
@@ -48,7 +48,7 @@ public class Player : Singleton<Player>
 
     void JumpMovement()
     {
-        float horizontalDirection = transform.position.x >= 0 ? 1f : -1f;
+        float horizontalDirection = _directionJump ? 1f : -1f;
         Vector3 direction = new Vector3(horizontalDirection, 0, 0);
         _rb.velocity = direction * moveSpeed;
     }
@@ -56,6 +56,14 @@ public class Player : Singleton<Player>
     private void OnCollisionEnter2D(Collision2D collision)
     {
         _canJump = true;
+
+        Vector2 contactNormal = collision.contacts[0].normal;
+
+        if (Mathf.Abs(contactNormal.x) > Mathf.Abs(contactNormal.y))
+        {
+            _directionJump = contactNormal.x < 0.0f;
+        }
+
         Vector2 bounceDirection = collision.contacts[0].normal;
         _rb.AddForce(bounceDirection * bounceForce, ForceMode2D.Impulse);
 
@@ -69,6 +77,7 @@ public class Player : Singleton<Player>
         if (collision.gameObject.CompareTag("wall"))
         {
             _soundManager.PlaySound(0, pitchMin: 0.9f, pitchMax: 1.1f, volume: 0.45f);
+            _directionJump = collision.transform.position.x >= 0;
         }
         else if (collision.gameObject.CompareTag("damage"))
         {

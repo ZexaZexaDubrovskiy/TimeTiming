@@ -1,7 +1,6 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.UIElements;
 
 public class Spawner : Singleton<Spawner>
 {
@@ -40,11 +39,11 @@ public class Spawner : Singleton<Spawner>
         }
         else
             timer -= Time.deltaTime;
+        MovementItems(gameObjects);
     }
 
     private void FixedUpdate()
     {
-        MovementItems(gameObjects);
         MoveBackground();
     }
 
@@ -52,7 +51,9 @@ public class Spawner : Singleton<Spawner>
     private void MovementItems(List<GameObject> GOs)
     {
         for (int i = 0; i < GOs.Count; i++)
-            GOs[i].transform.position = new Vector2(GOs[i].transform.position.x, GOs[i].transform.position.y - speed * Time.fixedDeltaTime);
+        {
+            GOs[i].transform.position = new Vector2(GOs[i].transform.position.x, GOs[i].transform.position.y - speed * Time.deltaTime);
+        }
         CheckPositionItem(GOs);
     }
 
